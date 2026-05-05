@@ -1,20 +1,44 @@
-name: Docker CI
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
 
-permissions:
-  contents: read   # ✅ important fix
-
 jobs:
-  build:
+
+  ci:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Build Docker Images
-        run: docker compose build
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install Backend Dependencies
+      run: |
+        cd backend
+        npm install
+
+    - name: Run Backend Tests
+      run: |
+        cd backend
+        npm test
+
+  cd:
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Build Docker Containers
+      run: docker-compose build
+
+    - name: Run Containers
+      run: docker-compose up -d
